@@ -20,25 +20,29 @@ namespace GameFramework
             /// 获取规范的路径。
             /// </summary>
             /// <param name="path">要规范的路径。</param>
+            /// <param name="debugPosition">调试定位。为了方便 java script 调试。</param> 2022.08.31
             /// <returns>规范的路径。</returns>
-            public static string GetRegularPath(string path)
+            public static string GetRegularPath(string path, string debugPosition)
             {
                 if (path == null)
                 {
                     return null;
                 }
 
-                return path.Replace('\\', '/');
+                string newPath = path.Replace('\\', '/');
+                GameFrameworkLog.Debug("... GetRegularPath. {0} -> {1} [debugPosition = {2}]", path, newPath, debugPosition);
+                return newPath;
             }
 
             /// <summary>
             /// 获取远程格式的路径（带有file:// 或 http:// 前缀）。
             /// </summary>
             /// <param name="path">原始路径。</param>
+            /// <param name="debugPosition">调试定位。为了方便 java script 调试。</param> 2022.08.31
             /// <returns>远程格式路径。</returns>
-            public static string GetRemotePath(string path)
+            public static string GetRemotePath(string path, string debugPosition)
             {
-                string regularPath = GetRegularPath(path);
+                string regularPath = GetRegularPath(path, debugPosition);
                 if (regularPath == null)
                 {
                     return null;

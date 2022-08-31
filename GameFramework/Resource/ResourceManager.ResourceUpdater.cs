@@ -79,7 +79,7 @@ namespace GameFramework.Resource
                 m_CurrentGenerateReadWriteVersionListLength = 0;
                 m_UpdateRetryCount = 3;
                 m_FailureFlag = false;
-                m_ReadWriteVersionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName));
+                m_ReadWriteVersionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName), "ResourceUpdater.Constructor");
                 m_ReadWriteVersionListTempFileName = Utility.Text.Format("{0}.{1}", m_ReadWriteVersionListFileName, TempExtension);
 
                 ResourceApplyStart = null;
@@ -339,6 +339,7 @@ namespace GameFramework.Resource
                 {
                     long length = 0L;
                     ResourcePackVersionList versionList = default(ResourcePackVersionList);
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceUpdater.ApplyResources 1 : {0}", resourcePackPath);
                     using (FileStream fileStream = new FileStream(resourcePackPath, FileMode.Open, FileAccess.Read))
                     {
                         length = fileStream.Length;
@@ -356,6 +357,7 @@ namespace GameFramework.Resource
                     }
 
                     m_ApplyingResourcePackPath = resourcePackPath;
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceUpdater.ApplyResources 2 : {0}", resourcePackPath);
                     m_ApplyingResourcePackStream = new FileStream(resourcePackPath, FileMode.Open, FileAccess.Read);
                     m_ApplyingResourcePackStream.Position = versionList.Offset;
                     m_FailureFlag = false;
@@ -522,6 +524,7 @@ namespace GameFramework.Resource
                     }
 
                     m_ApplyingResourcePackStream.Position += applyInfo.Offset;
+                    GameFrameworkLog.Info("~~~~> 8 : {0}", applyInfo.ResourcePath);
                     using (FileStream fileStream = new FileStream(applyInfo.ResourcePath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         while ((bytesRead = m_ApplyingResourcePackStream.Read(m_CachedBytes, 0, bytesLeft < CachedBytesLength ? bytesLeft : CachedBytesLength)) > 0)
@@ -672,7 +675,7 @@ namespace GameFramework.Resource
 
                 updateInfo.Downloading = true;
                 string resourceFullNameWithCrc32 = updateInfo.ResourceName.Variant != null ? Utility.Text.Format("{0}.{1}.{2:x8}.{3}", updateInfo.ResourceName.Name, updateInfo.ResourceName.Variant, updateInfo.HashCode, DefaultExtension) : Utility.Text.Format("{0}.{1:x8}.{2}", updateInfo.ResourceName.Name, updateInfo.HashCode, DefaultExtension);
-                m_DownloadManager.AddDownload(updateInfo.ResourcePath, Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_UpdatePrefixUri, resourceFullNameWithCrc32)), updateInfo);
+                m_DownloadManager.AddDownload(updateInfo.ResourcePath, Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_UpdatePrefixUri, resourceFullNameWithCrc32), "ResourceUpdater.ApplyResource"), updateInfo);
                 return true;
             }
 
@@ -681,6 +684,7 @@ namespace GameFramework.Resource
                 FileStream fileStream = null;
                 try
                 {
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceUpdater.GenerateReadWriteVersionList : {0}", m_ReadWriteVersionListTempFileName);
                     fileStream = new FileStream(m_ReadWriteVersionListTempFileName, FileMode.Create, FileAccess.Write);
                     LocalVersionList.Resource[] resources = m_ResourceManager.m_ReadWriteResourceInfos.Count > 0 ? new LocalVersionList.Resource[m_ResourceManager.m_ReadWriteResourceInfos.Count] : null;
                     if (resources != null)
@@ -824,6 +828,7 @@ namespace GameFramework.Resource
 
                 try
                 {
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceUpdater.OnDownloadSuccess : {0}", e.DownloadPath);
                     using (FileStream fileStream = new FileStream(e.DownloadPath, FileMode.Open, FileAccess.ReadWrite))
                     {
                         bool compressed = updateInfo.Length != updateInfo.CompressedLength || updateInfo.HashCode != updateInfo.CompressedHashCode;

@@ -33,14 +33,17 @@ namespace GameFramework.FileSystem
             switch (access)
             {
                 case FileSystemAccess.Read:
+                    GameFrameworkLog.Debug("---> CommonFileSystemStream : {0} {1}", fullPath, access);
                     m_FileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     break;
 
                 case FileSystemAccess.Write:
+                    GameFrameworkLog.Debug("---> CommonFileSystemStream : {0} {1}", fullPath, access);
                     m_FileStream = new FileStream(fullPath, createNew ? FileMode.Create : FileMode.Open, FileAccess.Write, FileShare.Read);
                     break;
 
                 case FileSystemAccess.ReadWrite:
+                    GameFrameworkLog.Debug("---> CommonFileSystemStream : {0} {1}", fullPath, access);
                     m_FileStream = new FileStream(fullPath, createNew ? FileMode.Create : FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
                     break;
 

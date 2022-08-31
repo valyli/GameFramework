@@ -141,7 +141,7 @@ namespace GameFramework.Resource
                 }
 
                 m_VerifyResourceLengthPerFrame = verifyResourceLengthPerFrame;
-                m_ResourceManager.m_ResourceHelper.LoadBytes(Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName)), new LoadBytesCallbacks(OnLoadReadWriteVersionListSuccess, OnLoadReadWriteVersionListFailure), null);
+                m_ResourceManager.m_ResourceHelper.LoadBytes(Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName), "ResourceVerifier.VerifyResources"), new LoadBytesCallbacks(OnLoadReadWriteVersionListSuccess, OnLoadReadWriteVersionListFailure), null);
             }
 
             private bool VerifyResource(VerifyInfo verifyInfo)
@@ -194,12 +194,13 @@ namespace GameFramework.Resource
                 }
                 else
                 {
-                    string resourcePath = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.ReadWritePath, verifyInfo.ResourceName.FullName));
+                    string resourcePath = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.ReadWritePath, verifyInfo.ResourceName.FullName), "ResourceVerifier.VerifyResource");
                     if (!File.Exists(resourcePath))
                     {
                         return false;
                     }
 
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceVerifier.VerifyResource : {0}", resourcePath);
                     using (FileStream fileStream = new FileStream(resourcePath, FileMode.Open, FileAccess.Read))
                     {
                         int length = (int)fileStream.Length;
@@ -240,12 +241,13 @@ namespace GameFramework.Resource
 
             private void GenerateReadWriteVersionList()
             {
-                string readWriteVersionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName));
+                string readWriteVersionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, LocalVersionListFileName), "ResourceVerifier.GenerateReadWriteVersionList");
                 string readWriteVersionListTempFileName = Utility.Text.Format("{0}.{1}", readWriteVersionListFileName, TempExtension);
                 SortedDictionary<string, List<int>> cachedFileSystemsForGenerateReadWriteVersionList = new SortedDictionary<string, List<int>>(StringComparer.Ordinal);
                 FileStream fileStream = null;
                 try
                 {
+                    GameFrameworkLog.Debug("---> ResourceManager.ResourceVerifier.GenerateReadWriteVersionList : {0}", readWriteVersionListTempFileName);
                     fileStream = new FileStream(readWriteVersionListTempFileName, FileMode.Create, FileAccess.Write);
                     LocalVersionList.Resource[] resources = m_VerifyInfos.Count > 0 ? new LocalVersionList.Resource[m_VerifyInfos.Count] : null;
                     if (resources != null)

@@ -85,7 +85,7 @@ namespace GameFramework.Resource
                     throw new GameFrameworkException("Read-write path is invalid.");
                 }
 
-                string versionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, RemoteVersionListFileName));
+                string versionListFileName = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, RemoteVersionListFileName), "VersionListProcessor.CheckVersionListResult");
                 if (!File.Exists(versionListFileName))
                 {
                     return CheckVersionListResult.NeedUpdate;
@@ -95,6 +95,7 @@ namespace GameFramework.Resource
                 FileStream fileStream = null;
                 try
                 {
+                    GameFrameworkLog.Info("~~~~> 14 : {0}", versionListFileName);
                     fileStream = new FileStream(versionListFileName, FileMode.Open, FileAccess.Read);
                     object internalResourceVersionObject = null;
                     if (!m_ResourceManager.m_UpdatableVersionListSerializer.TryGetValue(fileStream, "InternalResourceVersion", out internalResourceVersionObject))
@@ -143,10 +144,10 @@ namespace GameFramework.Resource
                 m_VersionListHashCode = versionListHashCode;
                 m_VersionListCompressedLength = versionListCompressedLength;
                 m_VersionListCompressedHashCode = versionListCompressedHashCode;
-                string localVersionListFilePath = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, RemoteVersionListFileName));
+                string localVersionListFilePath = Utility.Path.GetRegularPath(Path.Combine(m_ResourceManager.m_ReadWritePath, RemoteVersionListFileName), "VersionListProcessor.UpdateVersionList");
                 int dotPosition = RemoteVersionListFileName.LastIndexOf('.');
                 string latestVersionListFullNameWithCrc32 = Utility.Text.Format("{0}.{2:x8}.{1}", RemoteVersionListFileName.Substring(0, dotPosition), RemoteVersionListFileName.Substring(dotPosition + 1), m_VersionListHashCode);
-                m_DownloadManager.AddDownload(localVersionListFilePath, Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_UpdatePrefixUri, latestVersionListFullNameWithCrc32)), this);
+                m_DownloadManager.AddDownload(localVersionListFilePath, Utility.Path.GetRemotePath(Path.Combine(m_ResourceManager.m_UpdatePrefixUri, latestVersionListFullNameWithCrc32), "VersionListProcessor.UpdateVersionList"), this);
             }
 
             private void OnDownloadSuccess(object sender, DownloadSuccessEventArgs e)
@@ -159,6 +160,7 @@ namespace GameFramework.Resource
 
                 try
                 {
+                    GameFrameworkLog.Debug("---> ResourceManager.VersionListProcessor.OnDownloadSuccess : {0}", e.DownloadPath);
                     using (FileStream fileStream = new FileStream(e.DownloadPath, FileMode.Open, FileAccess.ReadWrite))
                     {
                         int length = (int)fileStream.Length;

@@ -1386,6 +1386,7 @@ namespace GameFramework.Resource
             {
                 long length = 0L;
                 ResourcePackVersionList versionList = default(ResourcePackVersionList);
+                GameFrameworkLog.Debug("---> ResourceManager.VerifyResourcePack : {0}", resourcePackPath);
                 using (FileStream fileStream = new FileStream(resourcePackPath, FileMode.Open, FileAccess.Read))
                 {
                     length = fileStream.Length;
@@ -1403,6 +1404,7 @@ namespace GameFramework.Resource
                 }
 
                 int hashCode = 0;
+                GameFrameworkLog.Debug("---> ResourceManager.VerifyResourcePack : {0}", resourcePackPath);
                 using (FileStream fileStream = new FileStream(resourcePackPath, FileMode.Open, FileAccess.Read))
                 {
                     fileStream.Position = versionList.Offset;
@@ -2301,7 +2303,7 @@ namespace GameFramework.Resource
             {
                 if (!m_ReadOnlyFileSystems.TryGetValue(fileSystemName, out fileSystem))
                 {
-                    string fullPath = Utility.Path.GetRegularPath(Path.Combine(m_ReadOnlyPath, Utility.Text.Format("{0}.{1}", fileSystemName, DefaultExtension)));
+                    string fullPath = Utility.Path.GetRegularPath(Path.Combine(m_ReadOnlyPath, Utility.Text.Format("{0}.{1}", fileSystemName, DefaultExtension)),"ResourceManager.GetFileSystem1");
                     fileSystem = m_FileSystemManager.GetFileSystem(fullPath);
                     if (fileSystem == null)
                     {
@@ -2314,7 +2316,7 @@ namespace GameFramework.Resource
             {
                 if (!m_ReadWriteFileSystems.TryGetValue(fileSystemName, out fileSystem))
                 {
-                    string fullPath = Utility.Path.GetRegularPath(Path.Combine(m_ReadWritePath, Utility.Text.Format("{0}.{1}", fileSystemName, DefaultExtension)));
+                    string fullPath = Utility.Path.GetRegularPath(Path.Combine(m_ReadWritePath, Utility.Text.Format("{0}.{1}", fileSystemName, DefaultExtension)), "ResourceManager.GetFileSystem2");
                     fileSystem = m_FileSystemManager.GetFileSystem(fullPath);
                     if (fileSystem == null)
                     {
@@ -2427,7 +2429,7 @@ namespace GameFramework.Resource
 
         private void OnCheckerResourceNeedUpdate(ResourceName resourceName, string fileSystemName, LoadType loadType, int length, int hashCode, int compressedLength, int compressedHashCode)
         {
-            m_ResourceUpdater.AddResourceUpdate(resourceName, fileSystemName, loadType, length, hashCode, compressedLength, compressedHashCode, Utility.Path.GetRegularPath(Path.Combine(m_ReadWritePath, resourceName.FullName)));
+            m_ResourceUpdater.AddResourceUpdate(resourceName, fileSystemName, loadType, length, hashCode, compressedLength, compressedHashCode, Utility.Path.GetRegularPath(Path.Combine(m_ReadWritePath, resourceName.FullName), "ResourceManager.OnCheckerResourceNeedUpdate"));
         }
 
         private void OnCheckerResourceCheckComplete(int movedCount, int removedCount, int updateCount, long updateTotalLength, long updateTotalCompressedLength)

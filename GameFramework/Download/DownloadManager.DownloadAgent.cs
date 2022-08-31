@@ -202,6 +202,7 @@ namespace GameFramework.Download
                             Directory.CreateDirectory(directory);
                         }
 
+                        GameFrameworkLog.Debug("===> DownloadManager.DownloadAgent {0}", downloadFile);
                         m_FileStream = new FileStream(downloadFile, FileMode.Create, FileAccess.Write);
                         m_StartLength = m_SavedLength = m_DownloadedLength = 0L;
                     }

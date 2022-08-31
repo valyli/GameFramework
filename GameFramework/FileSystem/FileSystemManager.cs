@@ -102,7 +102,7 @@ namespace GameFramework.FileSystem
                 throw new GameFrameworkException("Full path is invalid.");
             }
 
-            return m_FileSystems.ContainsKey(Utility.Path.GetRegularPath(fullPath));
+            return m_FileSystems.ContainsKey(Utility.Path.GetRegularPath(fullPath, "FileSystemManager.HasFileSystem()"));
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace GameFramework.FileSystem
             }
 
             FileSystem fileSystem = null;
-            if (m_FileSystems.TryGetValue(Utility.Path.GetRegularPath(fullPath), out fileSystem))
+            if (m_FileSystems.TryGetValue(Utility.Path.GetRegularPath(fullPath, "FileSystemManager.GetFileSystem()"), out fileSystem))
             {
                 return fileSystem;
             }
@@ -156,7 +156,7 @@ namespace GameFramework.FileSystem
                 throw new GameFrameworkException("Access read is invalid.");
             }
 
-            fullPath = Utility.Path.GetRegularPath(fullPath);
+            fullPath = Utility.Path.GetRegularPath(fullPath, "FileSystemManager.CreateFileSystem()");
             if (m_FileSystems.ContainsKey(fullPath))
             {
                 throw new GameFrameworkException(Utility.Text.Format("File system '{0}' is already exist.", fullPath));
@@ -201,7 +201,7 @@ namespace GameFramework.FileSystem
                 throw new GameFrameworkException("Access is invalid.");
             }
 
-            fullPath = Utility.Path.GetRegularPath(fullPath);
+            fullPath = Utility.Path.GetRegularPath(fullPath, "FileSystemManager.LoadFileSystem()");
             if (m_FileSystems.ContainsKey(fullPath))
             {
                 throw new GameFrameworkException(Utility.Text.Format("File system '{0}' is already exist.", fullPath));

@@ -941,6 +941,7 @@ namespace GameFramework.FileSystem
                 return false;
             }
 
+            GameFrameworkLog.Debug("---> FileSystem.WriteFile : {0} {1}", filePath, name);
             using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 return WriteFile(name, fileStream);
@@ -987,6 +988,7 @@ namespace GameFramework.FileSystem
                 Directory.CreateDirectory(directory);
             }
 
+            GameFrameworkLog.Info("~~~~> 5 : {0}", filePath);
             using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 int length = fileInfo.Length;
