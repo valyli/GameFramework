@@ -7,7 +7,7 @@
 
 using System;
 using System.Net;
-using System.Net.Sockets;
+using System.Net.WebSockets;
 
 namespace GameFramework.Network
 {
@@ -27,7 +27,7 @@ namespace GameFramework.Network
         /// <summary>
         /// 获取网络频道所使用的 Socket。
         /// </summary>
-        Socket Socket
+        ClientWebSocket Socket
         {
             get;
         }

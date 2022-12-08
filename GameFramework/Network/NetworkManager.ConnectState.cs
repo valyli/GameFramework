@@ -5,7 +5,7 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
-using System.Net.Sockets;
+using System.Net.WebSockets;
 
 namespace GameFramework.Network
 {
@@ -13,16 +13,16 @@ namespace GameFramework.Network
     {
         private sealed class ConnectState
         {
-            private readonly Socket m_Socket;
+            private readonly ClientWebSocket m_Socket;
             private readonly object m_UserData;
 
-            public ConnectState(Socket socket, object userData)
+            public ConnectState(ClientWebSocket socket, object userData)
             {
                 m_Socket = socket;
                 m_UserData = userData;
             }
 
-            public Socket Socket
+            public ClientWebSocket Socket
             {
                 get
                 {

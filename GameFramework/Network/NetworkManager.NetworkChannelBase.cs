@@ -8,7 +8,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Threading;
 
 namespace GameFramework.Network
 {
@@ -28,7 +29,7 @@ namespace GameFramework.Network
             protected AddressFamily m_AddressFamily;
             protected bool m_ResetHeartBeatElapseSecondsWhenReceivePacket;
             protected float m_HeartBeatInterval;
-            protected Socket m_Socket;
+            protected ClientWebSocket m_Socket;
             protected readonly SendState m_SendState;
             protected readonly ReceiveState m_ReceiveState;
             protected readonly HeartBeatState m_HeartBeatState;
@@ -40,7 +41,7 @@ namespace GameFramework.Network
             public GameFrameworkAction<NetworkChannelBase, object> NetworkChannelConnected;
             public GameFrameworkAction<NetworkChannelBase> NetworkChannelClosed;
             public GameFrameworkAction<NetworkChannelBase, int> NetworkChannelMissHeartBeat;
-            public GameFrameworkAction<NetworkChannelBase, NetworkErrorCode, SocketError, string> NetworkChannelError;
+            public GameFrameworkAction<NetworkChannelBase, NetworkErrorCode, WebSocketError , string> NetworkChannelError;
             public GameFrameworkAction<NetworkChannelBase, object> NetworkChannelCustomError;
 
             /// <summary>
@@ -89,7 +90,7 @@ namespace GameFramework.Network
             /// <summary>
             /// 获取网络频道所使用的 Socket。
             /// </summary>
-            public Socket Socket
+            public ClientWebSocket Socket
             {
                 get
                 {
@@ -106,7 +107,7 @@ namespace GameFramework.Network
                 {
                     if (m_Socket != null)
                     {
-                        return m_Socket.Connected;
+                        return m_Socket.State == WebSocketState.Connecting;
                     }
 
                     return false;
@@ -351,7 +352,7 @@ namespace GameFramework.Network
                         string errorMessage = Utility.Text.Format("Not supported address family '{0}'.", ipAddress.AddressFamily);
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.AddressFamilyError, SocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.AddressFamilyError, WebSocketError.Success, errorMessage);
                             return;
                         }
 
@@ -365,49 +366,47 @@ namespace GameFramework.Network
             /// <summary>
             /// 关闭连接并释放所有相关资源。
             /// </summary>
-            public void Close()
+            public async void Close()
             {
-                lock (this)
+                if (m_Socket == null)
                 {
-                    if (m_Socket == null)
+                    return;
+                }
+
+                m_Active = false;
+
+                try
+                {
+                    await m_Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "socket close", CancellationToken.None);
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    m_Socket.Abort();
+                    m_Socket.Dispose();
+                    m_Socket = null;
+
+                    if (NetworkChannelClosed != null)
                     {
-                        return;
+                        NetworkChannelClosed(this);
                     }
+                }
 
-                    m_Active = false;
+                m_SentPacketCount = 0;
+                m_ReceivedPacketCount = 0;
 
-                    try
-                    {
-                        m_Socket.Shutdown(SocketShutdown.Both);
-                    }
-                    catch
-                    {
-                    }
-                    finally
-                    {
-                        m_Socket.Close();
-                        m_Socket = null;
+                lock (m_SendPacketPool)
+                {
+                    m_SendPacketPool.Clear();
+                }
 
-                        if (NetworkChannelClosed != null)
-                        {
-                            NetworkChannelClosed(this);
-                        }
-                    }
+                m_ReceivePacketPool.Clear();
 
-                    m_SentPacketCount = 0;
-                    m_ReceivedPacketCount = 0;
-
-                    lock (m_SendPacketPool)
-                    {
-                        m_SendPacketPool.Clear();
-                    }
-
-                    m_ReceivePacketPool.Clear();
-
-                    lock (m_HeartBeatState)
-                    {
-                        m_HeartBeatState.Reset(true);
-                    }
+                lock (m_HeartBeatState)
+                {
+                    m_HeartBeatState.Reset(true);
                 }
             }
 
@@ -423,7 +422,7 @@ namespace GameFramework.Network
                     string errorMessage = "You must connect first.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, SocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
                         return;
                     }
 
@@ -435,7 +434,7 @@ namespace GameFramework.Network
                     string errorMessage = "Socket is not active.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, SocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
                         return;
                     }
 
@@ -447,7 +446,7 @@ namespace GameFramework.Network
                     string errorMessage = "Packet is invalid.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, SocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
                         return;
                     }
 
@@ -515,8 +514,8 @@ namespace GameFramework.Network
                         m_Active = false;
                         if (NetworkChannelError != null)
                         {
-                            SocketException socketException = exception as SocketException;
-                            NetworkChannelError(this, NetworkErrorCode.SerializeError, socketException != null ? socketException.SocketErrorCode : SocketError.Success, exception.ToString());
+                            WebSocketException  socketException = exception as WebSocketException ;
+                            NetworkChannelError(this, NetworkErrorCode.SerializeError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
                             return false;
                         }
 
@@ -528,7 +527,7 @@ namespace GameFramework.Network
                         string errorMessage = "Serialized packet failure.";
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.SerializeError, SocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.SerializeError, WebSocketError.Success, errorMessage);
                             return false;
                         }
 
@@ -561,7 +560,7 @@ namespace GameFramework.Network
                         string errorMessage = "Packet header is invalid.";
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, SocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, WebSocketError.Success, errorMessage);
                             return false;
                         }
 
@@ -581,8 +580,8 @@ namespace GameFramework.Network
                     m_Active = false;
                     if (NetworkChannelError != null)
                     {
-                        SocketException socketException = exception as SocketException;
-                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, socketException != null ? socketException.SocketErrorCode : SocketError.Success, exception.ToString());
+                        WebSocketException socketException = exception as WebSocketException;
+                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
                         return false;
                     }
 
@@ -621,8 +620,8 @@ namespace GameFramework.Network
                     m_Active = false;
                     if (NetworkChannelError != null)
                     {
-                        SocketException socketException = exception as SocketException;
-                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketError, socketException != null ? socketException.SocketErrorCode : SocketError.Success, exception.ToString());
+                        WebSocketException socketException = exception as WebSocketException;
+                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
                         return false;
                     }
 

@@ -5,7 +5,7 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
-using System.Net.Sockets;
+using System.Net.WebSockets;
 
 namespace GameFramework.Network
 {
@@ -21,7 +21,7 @@ namespace GameFramework.Network
         {
             NetworkChannel = null;
             ErrorCode = NetworkErrorCode.Unknown;
-            SocketErrorCode = SocketError.Success;
+            SocketErrorCode = WebSocketError.Success;
             ErrorMessage = null;
         }
 
@@ -46,7 +46,7 @@ namespace GameFramework.Network
         /// <summary>
         /// 获取 Socket 错误码。
         /// </summary>
-        public SocketError SocketErrorCode
+        public WebSocketError SocketErrorCode
         {
             get;
             private set;
@@ -69,7 +69,7 @@ namespace GameFramework.Network
         /// <param name="socketErrorCode">Socket 错误码。</param>
         /// <param name="errorMessage">错误信息。</param>
         /// <returns>创建的网络错误事件。</returns>
-        public static NetworkErrorEventArgs Create(INetworkChannel networkChannel, NetworkErrorCode errorCode, SocketError socketErrorCode, string errorMessage)
+        public static NetworkErrorEventArgs Create(INetworkChannel networkChannel, NetworkErrorCode errorCode, WebSocketError socketErrorCode, string errorMessage)
         {
             NetworkErrorEventArgs networkErrorEventArgs = ReferencePool.Acquire<NetworkErrorEventArgs>();
             networkErrorEventArgs.NetworkChannel = networkChannel;
@@ -86,7 +86,7 @@ namespace GameFramework.Network
         {
             NetworkChannel = null;
             ErrorCode = NetworkErrorCode.Unknown;
-            SocketErrorCode = SocketError.Success;
+            SocketErrorCode = WebSocketError.Success;
             ErrorMessage = null;
         }
     }

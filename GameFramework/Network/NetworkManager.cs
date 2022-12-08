@@ -7,7 +7,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using System.Net.WebSockets;
 
 namespace GameFramework.Network
 {
@@ -242,12 +242,8 @@ namespace GameFramework.Network
             NetworkChannelBase networkChannel = null;
             switch (serviceType)
             {
-                case ServiceType.Tcp:
-                    networkChannel = new TcpNetworkChannel(name, networkChannelHelper);
-                    break;
-
-                case ServiceType.TcpWithSyncReceive:
-                    networkChannel = new TcpWithSyncReceiveNetworkChannel(name, networkChannelHelper);
+                case ServiceType.WebSocket:
+                    networkChannel = new WebSocketNetworkChannel(name, networkChannelHelper);
                     break;
 
                 default:
@@ -324,7 +320,7 @@ namespace GameFramework.Network
             }
         }
 
-        private void OnNetworkChannelError(NetworkChannelBase networkChannel, NetworkErrorCode errorCode, SocketError socketErrorCode, string errorMessage)
+        private void OnNetworkChannelError(NetworkChannelBase networkChannel, NetworkErrorCode errorCode, WebSocketError socketErrorCode, string errorMessage)
         {
             if (m_NetworkErrorEventHandler != null)
             {
