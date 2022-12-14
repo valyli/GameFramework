@@ -74,7 +74,7 @@ namespace GameFramework.Network
             {
                 try
                 {
-                    string url = string.Format("ws://{0}:{1}", ipAddress.ToString(), port);
+                    string url = string.Format("ws://{0}:{1}/ws", ipAddress.ToString(), port);
                     Uri uri = new Uri(url);
                     await m_Socket.ConnectAsync(uri, CancellationToken.None);
                     ConnectCallback(new ConnectState(m_Socket, userData));
