@@ -6,6 +6,7 @@
 //------------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -43,6 +44,8 @@ namespace GameFramework.Network
             {
                 base.Connect(ipAddress, port, userData);
                 m_Socket = new ClientWebSocket();
+                string origin = string.Format("http://{0}:{1}", ipAddress.ToString(), port);
+                m_Socket.Options.SetRequestHeader("Origin", origin);
                 if (m_Socket == null)
                 {
                     string errorMessage = "Initialize network channel failure.";
@@ -130,7 +133,8 @@ namespace GameFramework.Network
                 try
                 {
                     byte[] bsend = m_SendState.Stream.GetBuffer();
-                    await m_Socket.SendAsync(new ArraySegment<byte>(bsend), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    int length = Convert.ToInt32(m_SendState.Stream.Length);
+                    await m_Socket.SendAsync(new ArraySegment<byte>(bsend, 0, length), WebSocketMessageType.Binary, true, CancellationToken.None);
                     SendCallback(m_Socket);
                 }
                 catch (Exception exception)
@@ -149,7 +153,7 @@ namespace GameFramework.Network
 
             private void SendCallback(ClientWebSocket socket)
             {
-                if (m_Socket.State != WebSocketState.Connecting)
+                if (m_Socket.State != WebSocketState.Open)
                 {
                     m_Active = false;
                     return;
@@ -182,7 +186,7 @@ namespace GameFramework.Network
 
             private void ReceiveCallback(ClientWebSocket socket, WebSocketReceiveResult wsrResult)
             {
-                if (m_Socket.State != WebSocketState.Connecting)
+                if (m_Socket.State != WebSocketState.Open)
                 {
                     m_Active = false;
                     return;
@@ -196,21 +200,12 @@ namespace GameFramework.Network
                 }
                 
                 m_ReceiveState.Stream.Position = 0L;
-                bool processSuccess = false;
-                if (m_ReceiveState.PacketHeader != null)
+                m_ReceiveState.Stream.SetLength(0);
+                int packetLength = ProcessPacketHeader();
+                if (packetLength > 0)
                 {
-                    processSuccess = ProcessPacket();
+                    ProcessPacket();
                     m_ReceivedPacketCount++;
-                }
-                else
-                {
-                    processSuccess = ProcessPacketHeader();
-                }
-
-                if (processSuccess)
-                {
-                    ReceiveAsync();
-                    return;
                 }
             }
         }

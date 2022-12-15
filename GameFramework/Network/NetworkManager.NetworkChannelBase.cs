@@ -107,7 +107,7 @@ namespace GameFramework.Network
                 {
                     if (m_Socket != null)
                     {
-                        return m_Socket.State == WebSocketState.Connecting;
+                        return m_Socket.State == WebSocketState.Open;
                     }
 
                     return false;
@@ -543,7 +543,7 @@ namespace GameFramework.Network
             {
             }
 
-            protected virtual bool ProcessPacketHeader()
+            protected virtual int ProcessPacketHeader()
             {
                 try
                 {
@@ -561,19 +561,14 @@ namespace GameFramework.Network
                         if (NetworkChannelError != null)
                         {
                             NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, WebSocketError.Success, errorMessage);
-                            return false;
+                            return 0;
                         }
 
                         throw new GameFrameworkException(errorMessage);
                     }
 
                     m_ReceiveState.PrepareForPacket(packetHeader);
-                    if (packetHeader.PacketLength <= 0)
-                    {
-                        bool processSuccess = ProcessPacket();
-                        m_ReceivedPacketCount++;
-                        return processSuccess;
-                    }
+                    return packetHeader.PacketLength;
                 }
                 catch (Exception exception)
                 {
@@ -582,16 +577,14 @@ namespace GameFramework.Network
                     {
                         WebSocketException socketException = exception as WebSocketException;
                         NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
-                        return false;
+                        return 0;
                     }
 
                     throw;
                 }
-
-                return true;
             }
 
-            protected virtual bool ProcessPacket()
+            protected virtual void ProcessPacket()
             {
                 lock (m_HeartBeatState)
                 {
@@ -622,13 +615,9 @@ namespace GameFramework.Network
                     {
                         WebSocketException socketException = exception as WebSocketException;
                         NetworkChannelError(this, NetworkErrorCode.DeserializePacketError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
-                        return false;
                     }
-
                     throw;
                 }
-
-                return true;
             }
         }
     }
