@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 
 namespace GameFramework.Network
 {
@@ -17,7 +16,6 @@ namespace GameFramework.Network
     internal sealed partial class NetworkManager : GameFrameworkModule, INetworkManager
     {
         private readonly Dictionary<string, NetworkChannelBase> m_NetworkChannels;
-
         private EventHandler<NetworkConnectedEventArgs> m_NetworkConnectedEventHandler;
         private EventHandler<NetworkClosedEventArgs> m_NetworkClosedEventHandler;
         private EventHandler<NetworkMissHeartBeatEventArgs> m_NetworkMissHeartBeatEventHandler;
@@ -221,8 +219,9 @@ namespace GameFramework.Network
         /// <param name="name">网络频道名称。</param>
         /// <param name="serviceType">网络服务类型。</param>
         /// <param name="networkChannelHelper">网络频道辅助器。</param>
+        /// <param name="webSocketNetworkHelper">网络连接辅助器。</param>
         /// <returns>要创建的网络频道。</returns>
-        public INetworkChannel CreateNetworkChannel(string name, ServiceType serviceType, INetworkChannelHelper networkChannelHelper)
+        public INetworkChannel CreateNetworkChannel(string name, ServiceType serviceType, INetworkChannelHelper networkChannelHelper, IWebSocketNetworkHelper webSocketNetworkHelper)
         {
             if (networkChannelHelper == null)
             {
@@ -243,7 +242,7 @@ namespace GameFramework.Network
             switch (serviceType)
             {
                 case ServiceType.WebSocket:
-                    networkChannel = new WebSocketNetworkChannel(name, networkChannelHelper);
+                    networkChannel = new WebSocketNetworkChannel(name, networkChannelHelper, webSocketNetworkHelper);
                     break;
 
                 default:
@@ -320,13 +319,13 @@ namespace GameFramework.Network
             }
         }
 
-        private void OnNetworkChannelError(NetworkChannelBase networkChannel, NetworkErrorCode errorCode, WebSocketError socketErrorCode, string errorMessage)
+        private void OnNetworkChannelError(NetworkChannelBase networkChannel, NetworkErrorCode errorCode, string errorMessage)
         {
             if (m_NetworkErrorEventHandler != null)
             {
                 lock (m_NetworkErrorEventHandler)
                 {
-                    NetworkErrorEventArgs networkErrorEventArgs = NetworkErrorEventArgs.Create(networkChannel, errorCode, socketErrorCode, errorMessage);
+                    NetworkErrorEventArgs networkErrorEventArgs = NetworkErrorEventArgs.Create(networkChannel, errorCode, errorMessage);
                     m_NetworkErrorEventHandler(this, networkErrorEventArgs);
                     ReferencePool.Release(networkErrorEventArgs);
                 }

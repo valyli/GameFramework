@@ -8,8 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.WebSockets;
-using System.Threading;
 
 namespace GameFramework.Network
 {
@@ -26,22 +24,23 @@ namespace GameFramework.Network
             protected readonly Queue<Packet> m_SendPacketPool;
             protected readonly EventPool<Packet> m_ReceivePacketPool;
             protected readonly INetworkChannelHelper m_NetworkChannelHelper;
+            protected readonly IWebSocketNetworkHelper m_webSocketNetworkHelper;
             protected AddressFamily m_AddressFamily;
             protected bool m_ResetHeartBeatElapseSecondsWhenReceivePacket;
             protected float m_HeartBeatInterval;
-            protected ClientWebSocket m_Socket;
             protected readonly SendState m_SendState;
             protected readonly ReceiveState m_ReceiveState;
             protected readonly HeartBeatState m_HeartBeatState;
             protected int m_SentPacketCount;
             protected int m_ReceivedPacketCount;
             protected bool m_Active;
+            protected object m_UserData;
             private bool m_Disposed;
 
             public GameFrameworkAction<NetworkChannelBase, object> NetworkChannelConnected;
             public GameFrameworkAction<NetworkChannelBase> NetworkChannelClosed;
             public GameFrameworkAction<NetworkChannelBase, int> NetworkChannelMissHeartBeat;
-            public GameFrameworkAction<NetworkChannelBase, NetworkErrorCode, WebSocketError , string> NetworkChannelError;
+            public GameFrameworkAction<NetworkChannelBase, NetworkErrorCode, string> NetworkChannelError;
             public GameFrameworkAction<NetworkChannelBase, object> NetworkChannelCustomError;
 
             /// <summary>
@@ -49,16 +48,17 @@ namespace GameFramework.Network
             /// </summary>
             /// <param name="name">网络频道名称。</param>
             /// <param name="networkChannelHelper">网络频道辅助器。</param>
-            public NetworkChannelBase(string name, INetworkChannelHelper networkChannelHelper)
+            /// <param name="webSocketNetworkHelper">网络连接辅助器。</param>
+            public NetworkChannelBase(string name, INetworkChannelHelper networkChannelHelper, IWebSocketNetworkHelper webSocketNetworkHelper)
             {
                 m_Name = name ?? string.Empty;
                 m_SendPacketPool = new Queue<Packet>();
                 m_ReceivePacketPool = new EventPool<Packet>(EventPoolMode.Default);
                 m_NetworkChannelHelper = networkChannelHelper;
+                m_webSocketNetworkHelper = webSocketNetworkHelper;
                 m_AddressFamily = AddressFamily.Unknown;
                 m_ResetHeartBeatElapseSecondsWhenReceivePacket = false;
                 m_HeartBeatInterval = DefaultHeartBeatInterval;
-                m_Socket = null;
                 m_SendState = new SendState();
                 m_ReceiveState = new ReceiveState();
                 m_HeartBeatState = new HeartBeatState();
@@ -72,7 +72,9 @@ namespace GameFramework.Network
                 NetworkChannelMissHeartBeat = null;
                 NetworkChannelError = null;
                 NetworkChannelCustomError = null;
-
+                
+                m_webSocketNetworkHelper.OnClose += OnWebSocketClose;
+                
                 networkChannelHelper.Initialize(this);
             }
 
@@ -88,26 +90,15 @@ namespace GameFramework.Network
             }
 
             /// <summary>
-            /// 获取网络频道所使用的 Socket。
-            /// </summary>
-            public ClientWebSocket Socket
-            {
-                get
-                {
-                    return m_Socket;
-                }
-            }
-
-            /// <summary>
             /// 获取是否已连接。
             /// </summary>
             public bool Connected
             {
                 get
                 {
-                    if (m_Socket != null)
+                    if (m_webSocketNetworkHelper != null)
                     {
-                        return m_Socket.State == WebSocketState.Open;
+                        return m_webSocketNetworkHelper.isWebSocketOpen();
                     }
 
                     return false;
@@ -236,14 +227,16 @@ namespace GameFramework.Network
             /// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
             public virtual void Update(float elapseSeconds, float realElapseSeconds)
             {
-                if (m_Socket == null || !m_Active)
+                if (!m_Active)
                 {
                     return;
                 }
 
                 ProcessSend();
                 ProcessReceive();
-                if (m_Socket == null || !m_Active)
+                m_webSocketNetworkHelper.DispatchMessageQueue();
+                
+                if (!m_Active)
                 {
                     return;
                 }
@@ -256,7 +249,7 @@ namespace GameFramework.Network
                     int missHeartBeatCount = 0;
                     lock (m_HeartBeatState)
                     {
-                        if (m_Socket == null || !m_Active)
+                        if (!m_Active)
                         {
                             return;
                         }
@@ -332,12 +325,6 @@ namespace GameFramework.Network
             /// <param name="userData">用户自定义数据。</param>
             public virtual void Connect(IPAddress ipAddress, int port, object userData)
             {
-                if (m_Socket != null)
-                {
-                    Close();
-                    m_Socket = null;
-                }
-
                 switch (ipAddress.AddressFamily)
                 {
                     case System.Net.Sockets.AddressFamily.InterNetwork:
@@ -352,13 +339,14 @@ namespace GameFramework.Network
                         string errorMessage = Utility.Text.Format("Not supported address family '{0}'.", ipAddress.AddressFamily);
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.AddressFamilyError, WebSocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.AddressFamilyError, errorMessage);
                             return;
                         }
 
                         throw new GameFrameworkException(errorMessage);
                 }
 
+                m_UserData = userData;
                 m_SendState.Reset();
                 m_ReceiveState.PrepareForPacketHeader(m_NetworkChannelHelper.PacketHeaderLength);
             }
@@ -366,34 +354,32 @@ namespace GameFramework.Network
             /// <summary>
             /// 关闭连接并释放所有相关资源。
             /// </summary>
-            public async void Close()
+            public void Close()
             {
-                if (m_Socket == null)
-                {
-                    return;
-                }
-
                 m_Active = false;
 
                 try
                 {
-                    await m_Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "socket close", CancellationToken.None);
+                    m_webSocketNetworkHelper.Close();
                 }
-                catch
+                catch(Exception exception)
                 {
-                }
-                finally
-                {
-                    m_Socket.Abort();
-                    m_Socket.Dispose();
-                    m_Socket = null;
-
-                    if (NetworkChannelClosed != null)
+                    m_Active = false;
+                    if (NetworkChannelError != null)
                     {
-                        NetworkChannelClosed(this);
+                        NetworkChannelError(this, NetworkErrorCode.ConnectError, exception.ToString());
+                        return;
                     }
                 }
+            }
 
+            private void OnWebSocketClose(object userData)
+            {
+                m_Active = false;
+                if (NetworkChannelClosed != null)
+                {
+                    NetworkChannelClosed(this);
+                }
                 m_SentPacketCount = 0;
                 m_ReceivedPacketCount = 0;
 
@@ -417,12 +403,12 @@ namespace GameFramework.Network
             /// <param name="packet">要发送的消息包。</param>
             public void Send<T>(T packet) where T : Packet
             {
-                if (m_Socket == null)
+                if (m_webSocketNetworkHelper.isWebSocketOpen())
                 {
                     string errorMessage = "You must connect first.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, errorMessage);
                         return;
                     }
 
@@ -434,7 +420,7 @@ namespace GameFramework.Network
                     string errorMessage = "Socket is not active.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, errorMessage);
                         return;
                     }
 
@@ -446,7 +432,7 @@ namespace GameFramework.Network
                     string errorMessage = "Packet is invalid.";
                     if (NetworkChannelError != null)
                     {
-                        NetworkChannelError(this, NetworkErrorCode.SendError, WebSocketError.Success, errorMessage);
+                        NetworkChannelError(this, NetworkErrorCode.SendError, errorMessage);
                         return;
                     }
 
@@ -514,8 +500,7 @@ namespace GameFramework.Network
                         m_Active = false;
                         if (NetworkChannelError != null)
                         {
-                            WebSocketException  socketException = exception as WebSocketException ;
-                            NetworkChannelError(this, NetworkErrorCode.SerializeError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
+                            NetworkChannelError(this, NetworkErrorCode.SerializeError, exception.ToString());
                             return false;
                         }
 
@@ -527,7 +512,7 @@ namespace GameFramework.Network
                         string errorMessage = "Serialized packet failure.";
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.SerializeError, WebSocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.SerializeError, errorMessage);
                             return false;
                         }
 
@@ -560,7 +545,7 @@ namespace GameFramework.Network
                         string errorMessage = "Packet header is invalid.";
                         if (NetworkChannelError != null)
                         {
-                            NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, WebSocketError.Success, errorMessage);
+                            NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, errorMessage);
                             return 0;
                         }
 
@@ -575,8 +560,7 @@ namespace GameFramework.Network
                     m_Active = false;
                     if (NetworkChannelError != null)
                     {
-                        WebSocketException socketException = exception as WebSocketException;
-                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
+                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketHeaderError, exception.ToString());
                         return 0;
                     }
 
@@ -613,8 +597,7 @@ namespace GameFramework.Network
                     m_Active = false;
                     if (NetworkChannelError != null)
                     {
-                        WebSocketException socketException = exception as WebSocketException;
-                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketError, socketException != null ? socketException.WebSocketErrorCode : WebSocketError.Success, exception.ToString());
+                        NetworkChannelError(this, NetworkErrorCode.DeserializePacketError, exception.ToString());
                     }
                     throw;
                 }

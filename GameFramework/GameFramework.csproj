@@ -168,6 +168,7 @@
     <Compile Include="Network\INetworkManager.cs" />
     <Compile Include="Network\IPacketHandler.cs" />
     <Compile Include="Network\IPacketHeader.cs" />
+    <Compile Include="Network\IWebSocketNetworkHelper.cs" />
     <Compile Include="Network\NetworkClosedEventArgs.cs" />
     <Compile Include="Network\NetworkConnectedEventArgs.cs" />
     <Compile Include="Network\NetworkCustomErrorEventArgs.cs" />
