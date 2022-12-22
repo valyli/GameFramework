@@ -879,6 +879,11 @@ namespace GameFramework.Resource
                 }
 
                 dependencyAssetNames = assetInfo.GetDependencyAssetNames();
+                foreach (string dependencyAssetName in dependencyAssetNames)
+                {
+                    // This log is very important for checking wrong dependency of Assets.
+                    GameFrameworkLog.Debug("Dependent relationship: {0} <- {1}", assetName, dependencyAssetName);
+                }
                 return m_ResourceManager.m_ResourceMode == ResourceMode.UpdatableWhilePlaying ? true : resourceInfo.Ready;
             }
 
