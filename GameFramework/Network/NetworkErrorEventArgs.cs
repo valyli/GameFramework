@@ -5,8 +5,6 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
-using System.Net.Sockets;
-
 namespace GameFramework.Network
 {
     /// <summary>
@@ -21,7 +19,6 @@ namespace GameFramework.Network
         {
             NetworkChannel = null;
             ErrorCode = NetworkErrorCode.Unknown;
-            SocketErrorCode = SocketError.Success;
             ErrorMessage = null;
         }
 
@@ -44,15 +41,6 @@ namespace GameFramework.Network
         }
 
         /// <summary>
-        /// 获取 Socket 错误码。
-        /// </summary>
-        public SocketError SocketErrorCode
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// 获取错误信息。
         /// </summary>
         public string ErrorMessage
@@ -66,15 +54,13 @@ namespace GameFramework.Network
         /// </summary>
         /// <param name="networkChannel">网络频道。</param>
         /// <param name="errorCode">错误码。</param>
-        /// <param name="socketErrorCode">Socket 错误码。</param>
         /// <param name="errorMessage">错误信息。</param>
         /// <returns>创建的网络错误事件。</returns>
-        public static NetworkErrorEventArgs Create(INetworkChannel networkChannel, NetworkErrorCode errorCode, SocketError socketErrorCode, string errorMessage)
+        public static NetworkErrorEventArgs Create(INetworkChannel networkChannel, NetworkErrorCode errorCode, string errorMessage)
         {
             NetworkErrorEventArgs networkErrorEventArgs = ReferencePool.Acquire<NetworkErrorEventArgs>();
             networkErrorEventArgs.NetworkChannel = networkChannel;
             networkErrorEventArgs.ErrorCode = errorCode;
-            networkErrorEventArgs.SocketErrorCode = socketErrorCode;
             networkErrorEventArgs.ErrorMessage = errorMessage;
             return networkErrorEventArgs;
         }
@@ -86,7 +72,6 @@ namespace GameFramework.Network
         {
             NetworkChannel = null;
             ErrorCode = NetworkErrorCode.Unknown;
-            SocketErrorCode = SocketError.Success;
             ErrorMessage = null;
         }
     }

@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GameFramework</RootNamespace>
     <AssemblyName>GameFramework</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,7 @@
     <DocumentationFile>bin\Debug\GameFramework.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,6 +37,7 @@
     <DocumentationFile>bin\Release\GameFramework.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -165,6 +168,7 @@
     <Compile Include="Network\INetworkManager.cs" />
     <Compile Include="Network\IPacketHandler.cs" />
     <Compile Include="Network\IPacketHeader.cs" />
+    <Compile Include="Network\IWebSocketNetworkHelper.cs" />
     <Compile Include="Network\NetworkClosedEventArgs.cs" />
     <Compile Include="Network\NetworkConnectedEventArgs.cs" />
     <Compile Include="Network\NetworkCustomErrorEventArgs.cs" />
@@ -176,8 +180,7 @@
     <Compile Include="Network\NetworkManager.NetworkChannelBase.cs" />
     <Compile Include="Network\NetworkManager.ReceiveState.cs" />
     <Compile Include="Network\NetworkManager.SendState.cs" />
-    <Compile Include="Network\NetworkManager.TcpNetworkChannel.cs" />
-    <Compile Include="Network\NetworkManager.TcpWithSyncReceiveNetworkChannel.cs" />
+    <Compile Include="Network\NetworkManager.WebSocketNetworkChannel.cs" />
     <Compile Include="Network\NetworkMissHeartBeatEventArgs.cs" />
     <Compile Include="Network\Packet.cs" />
     <Compile Include="Network\ServiceType.cs" />

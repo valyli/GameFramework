@@ -7,7 +7,6 @@
 
 using System;
 using System.Net;
-using System.Net.Sockets;
 
 namespace GameFramework.Network
 {
@@ -20,14 +19,6 @@ namespace GameFramework.Network
         /// 获取网络频道名称。
         /// </summary>
         string Name
-        {
-            get;
-        }
-
-        /// <summary>
-        /// 获取网络频道所使用的 Socket。
-        /// </summary>
-        Socket Socket
         {
             get;
         }

@@ -131,6 +131,7 @@ namespace GameFramework
         public bool Serialize(Stream stream, T data, byte version)
         {
             byte[] header = GetHeader();
+            GameFrameworkLog.Debug("---> Serialize {0}{1}{2} version={3}", (char)header[0], (char)header[1], (char)header[2], version);
             stream.WriteByte(header[0]);
             stream.WriteByte(header[1]);
             stream.WriteByte(header[2]);
@@ -155,6 +156,7 @@ namespace GameFramework
             byte header0 = (byte)stream.ReadByte();
             byte header1 = (byte)stream.ReadByte();
             byte header2 = (byte)stream.ReadByte();
+            GameFrameworkLog.Debug("<--- Deserialize need={0}{1}{2} current={3}{4}{5}", (char)header[0], (char)header[1], (char)header[2], (char)header0, (char)header1, (char)header2);
             if (header0 != header[0] || header1 != header[1] || header2 != header[2])
             {
                 throw new GameFrameworkException(Utility.Text.Format("Header is invalid, need '{0}{1}{2}', current '{3}{4}{5}'.", (char)header[0], (char)header[1], (char)header[2], (char)header0, (char)header1, (char)header2));
