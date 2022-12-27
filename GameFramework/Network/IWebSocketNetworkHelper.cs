@@ -18,7 +18,8 @@ namespace GameFramework.Network
         /// 初始化连接
         /// </summary>
         /// <param name="url">连接url</param>
-        void Initialize(string url);
+        /// <param name="origin">连接origin</param>
+        void Initialize(string url, string origin);
         
         /// <summary>
         /// 建立连接。

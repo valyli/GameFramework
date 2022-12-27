@@ -45,7 +45,8 @@ namespace GameFramework.Network
                 try
                 {
                     string url = string.Format("ws://{0}:{1}/ws", ipAddress.ToString(), port);
-                    m_webSocketNetworkHelper.Initialize(url);
+                    string origin = string.Format("http://{0}:{1}", ipAddress.ToString(), port);
+                    m_webSocketNetworkHelper.Initialize(url, origin);
                     m_NetworkChannelHelper.PrepareForConnecting();
                     m_webSocketNetworkHelper.Connect();
                 }
