@@ -170,7 +170,7 @@ namespace GameFramework.Network
                 m_Active = false;
                 if (NetworkChannelError != null)
                 {
-                    NetworkChannelError(this, NetworkErrorCode.Unknown, error);
+                    NetworkChannelError(this, NetworkErrorCode.SocketError, error);
                 }
             }
         }
