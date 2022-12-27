@@ -79,7 +79,9 @@ namespace GameFramework.Network
                 {
                     byte[] data = m_SendState.Stream.GetBuffer();
                     int length = Convert.ToInt32(m_SendState.Stream.Length);
-                    m_webSocketNetworkHelper.Send(new ArraySegment<byte>(data, 0, length).Array);
+                    byte[] sendData = new byte[length];
+                    Array.Copy(data, 0, sendData, 0, length);
+                    m_webSocketNetworkHelper.Send(sendData);
                     m_SentPacketCount++;
                     m_SendState.Reset();
                 }
@@ -98,7 +100,8 @@ namespace GameFramework.Network
             
             private void OnWebSocketOpen(object userData)
             {
-                if (m_webSocketNetworkHelper.isWebSocketOpen())
+                bool isWebSocketOpen = m_webSocketNetworkHelper.isWebSocketOpen();
+                if (!isWebSocketOpen)
                 {
                     m_Active = false;
                     return;

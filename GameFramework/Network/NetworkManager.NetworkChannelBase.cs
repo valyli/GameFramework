@@ -403,7 +403,7 @@ namespace GameFramework.Network
             /// <param name="packet">要发送的消息包。</param>
             public void Send<T>(T packet) where T : Packet
             {
-                if (m_webSocketNetworkHelper.isWebSocketOpen())
+                if (!m_webSocketNetworkHelper.isWebSocketOpen())
                 {
                     string errorMessage = "You must connect first.";
                     if (NetworkChannelError != null)
