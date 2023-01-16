@@ -62,5 +62,10 @@ namespace GameFramework.Download
         /// 重置下载代理辅助器。
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// Just for WebGL
+        /// </summary>
+        void SyncIndexDB(string reason);
     }
 }

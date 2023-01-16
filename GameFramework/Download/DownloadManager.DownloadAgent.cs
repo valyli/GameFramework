@@ -200,11 +200,15 @@ namespace GameFramework.Download
                         if (!Directory.Exists(directory))
                         {
                             Directory.CreateDirectory(directory);
+                            SyncIndexDB(string.Format("DownloadAgent.CreateDirectory: {0}", directory));
                         }
 
                         GameFrameworkLog.Debug("===> DownloadManager.DownloadAgent {0}", downloadFile);
                         m_FileStream = new FileStream(downloadFile, FileMode.Create, FileAccess.Write);
                         m_StartLength = m_SavedLength = m_DownloadedLength = 0L;
+                        
+                        // It is no need to persist .download files
+                        // SyncIndexDB(string.Format("DownloadAgent.new FileStream: {0}", downloadFile));
                     }
 
                     if (DownloadAgentStart != null)
@@ -253,6 +257,12 @@ namespace GameFramework.Download
                 m_SavedLength = 0L;
             }
 
+            public void SyncIndexDB(string reason)
+            {
+                m_Helper.SyncIndexDB(reason);
+            }
+
+
             /// <summary>
             /// 释放资源。
             /// </summary>
@@ -299,6 +309,9 @@ namespace GameFramework.Download
                         m_FileStream.Flush();
                         m_WaitFlushSize = 0;
                     }
+
+                    // To more invoke to lower efficiency.
+                    // SyncIndexDB(string.Format("FileStream.Flush: {0}", m_FileStream.Name));
                 }
                 catch (Exception exception)
                 {
@@ -337,6 +350,7 @@ namespace GameFramework.Download
                 }
 
                 File.Move(Utility.Text.Format("{0}.download", m_Task.DownloadPath), m_Task.DownloadPath);
+                SyncIndexDB(string.Format("DownloadAgent.File.Move: {0}", m_Task.DownloadPath));
 
                 m_Task.Status = DownloadTaskStatus.Done;
 
@@ -360,6 +374,7 @@ namespace GameFramework.Download
                 if (e.DeleteDownloading)
                 {
                     File.Delete(Utility.Text.Format("{0}.download", m_Task.DownloadPath));
+                    SyncIndexDB(string.Format("DownloadAgent.File.Delete: {0}", m_Task.DownloadPath));
                 }
 
                 m_Task.Status = DownloadTaskStatus.Error;
