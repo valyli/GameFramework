@@ -303,7 +303,8 @@ namespace GameFramework.Resource
             /// <param name="priority">加载资源的优先级。</param>
             /// <param name="loadAssetCallbacks">加载资源回调函数集。</param>
             /// <param name="userData">用户自定义数据。</param>
-            public void LoadAsset(string assetName, Type assetType, int priority, LoadAssetCallbacks loadAssetCallbacks, object userData)
+            /// <param name="updateOnly">只更新，不加载</param>
+            public void LoadAsset(string assetName, Type assetType, int priority, LoadAssetCallbacks loadAssetCallbacks, object userData, bool updateOnly = false)
             {
                 ResourceInfo resourceInfo = null;
                 string[] dependencyAssetNames = null;
@@ -347,7 +348,10 @@ namespace GameFramework.Resource
                     }
                 }
 
-                m_TaskPool.AddTask(mainTask);
+                if (!updateOnly)
+                {
+                    m_TaskPool.AddTask(mainTask);
+                }
                 if (!resourceInfo.Ready)
                 {
                     m_ResourceManager.UpdateResource(resourceInfo.ResourceName);
@@ -803,7 +807,7 @@ namespace GameFramework.Resource
                 m_TaskPool.GetAllTaskInfos(results);
             }
 
-            private bool LoadDependencyAsset(string assetName, int priority, LoadResourceTaskBase mainTask, object userData)
+            private bool LoadDependencyAsset(string assetName, int priority, LoadResourceTaskBase mainTask, object userData, bool onlyUpdate = false)
             {
                 if (mainTask == null)
                 {
@@ -825,13 +829,16 @@ namespace GameFramework.Resource
                 LoadDependencyAssetTask dependencyTask = LoadDependencyAssetTask.Create(assetName, priority, resourceInfo, dependencyAssetNames, mainTask, userData);
                 foreach (string dependencyAssetName in dependencyAssetNames)
                 {
-                    if (!LoadDependencyAsset(dependencyAssetName, priority, dependencyTask, userData))
+                    if (!LoadDependencyAsset(dependencyAssetName, priority, dependencyTask, userData, onlyUpdate))
                     {
                         return false;
                     }
                 }
 
-                m_TaskPool.AddTask(dependencyTask);
+                if (!onlyUpdate)
+                {
+                    m_TaskPool.AddTask(dependencyTask);
+                }
                 if (!resourceInfo.Ready)
                 {
                     m_ResourceManager.UpdateResource(resourceInfo.ResourceName);
