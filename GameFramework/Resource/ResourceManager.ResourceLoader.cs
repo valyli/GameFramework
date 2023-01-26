@@ -335,7 +335,7 @@ namespace GameFramework.Resource
                 LoadAssetTask mainTask = LoadAssetTask.Create(assetName, assetType, priority, resourceInfo, dependencyAssetNames, loadAssetCallbacks, userData);
                 foreach (string dependencyAssetName in dependencyAssetNames)
                 {
-                    if (!LoadDependencyAsset(dependencyAssetName, priority, mainTask, userData))
+                    if (!LoadDependencyAsset(dependencyAssetName, priority, mainTask, userData, updateOnly))
                     {
                         string errorMessage = Utility.Text.Format("Can not load dependency asset '{0}' when load asset '{1}'.", dependencyAssetName, assetName);
                         if (loadAssetCallbacks.LoadAssetFailureCallback != null)

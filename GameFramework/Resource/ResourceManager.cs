@@ -1456,6 +1456,12 @@ namespace GameFramework.Resource
 
             return m_ResourceLoader.HasAsset(assetName);
         }
+        
+        public bool HasReady(string assetName)
+        {
+            ResourceInfo resourceInfo = GetResourceInfoOfAssetName(assetName);
+            return resourceInfo.Ready;
+        }
 
         /// <summary>
         /// 异步加载资源。
@@ -2290,6 +2296,22 @@ namespace GameFramework.Resource
             }
 
             return null;
+        }
+
+        private ResourceInfo GetResourceInfoOfAssetName(string assetName)
+        {
+            if (string.IsNullOrEmpty(assetName))
+            {
+                return null;
+            }
+
+            AssetInfo assetInfo = GetAssetInfo(assetName);
+            if (assetInfo == null)
+            {
+                return null;
+            }
+
+            return GetResourceInfo(assetInfo.ResourceName);
         }
 
         private IFileSystem GetFileSystem(string fileSystemName, bool storageInReadOnly)

@@ -1,0 +1,11 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="21308">
+    <option name="allowRunningInParallel" value="false" />
+    <option name="listenPortForConnections" value="false" />
+    <option name="pid" value="21308" />
+    <option name="selectedOptions">
+      <list />
+    </option>
+    <method v="2" />
+  </configuration>
+</component>

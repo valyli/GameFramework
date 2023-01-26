@@ -514,6 +514,13 @@ namespace GameFramework.Resource
         HasAssetResult HasAsset(string assetName);
 
         /// <summary>
+        /// 存在资源
+        /// </summary>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
+        bool HasReady(string assetName);
+
+        /// <summary>
         /// 异步加载资源。
         /// </summary>
         /// <param name="assetName">要加载资源的名称。</param>
