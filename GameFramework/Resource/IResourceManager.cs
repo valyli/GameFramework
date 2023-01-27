@@ -521,6 +521,13 @@ namespace GameFramework.Resource
         bool HasReady(string assetName);
 
         /// <summary>
+        /// 用asset name获得资源名称
+        /// </summary>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
+        string GetResourceName(string assetName);
+
+        /// <summary>
         /// 异步加载资源。
         /// </summary>
         /// <param name="assetName">要加载资源的名称。</param>

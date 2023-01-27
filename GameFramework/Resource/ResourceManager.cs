@@ -1463,6 +1463,12 @@ namespace GameFramework.Resource
             return resourceInfo.Ready;
         }
 
+        public string GetResourceName(string assetName)
+        {
+            ResourceInfo resourceInfo = GetResourceInfoOfAssetName(assetName);
+            return resourceInfo.ResourceName.FullName;
+        }
+
         /// <summary>
         /// 异步加载资源。
         /// </summary>
