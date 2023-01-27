@@ -49,7 +49,8 @@ namespace GameFramework.Resource
         /// 通过加载资源代理辅助器开始异步读取资源文件。
         /// </summary>
         /// <param name="fullPath">要加载资源的完整路径名。</param>
-        void ReadFile(string fullPath);
+        /// <param name="fileLength">资源文件大小</param>
+        void ReadFile(string fullPath, int fileLength);
 
         /// <summary>
         /// 通过加载资源代理辅助器开始异步读取资源文件。

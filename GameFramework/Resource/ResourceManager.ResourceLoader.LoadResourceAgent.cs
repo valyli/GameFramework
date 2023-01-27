@@ -216,7 +216,7 @@ namespace GameFramework.Resource
                         }
                         else
                         {
-                            m_Helper.ReadFile(fullPath);
+                            m_Helper.ReadFile(fullPath, resourceInfo.Length);
                         }
                     }
                     else if (resourceInfo.LoadType == LoadType.LoadFromMemory || resourceInfo.LoadType == LoadType.LoadFromMemoryAndQuickDecrypt || resourceInfo.LoadType == LoadType.LoadFromMemoryAndDecrypt)
