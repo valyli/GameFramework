@@ -13,9 +13,13 @@ namespace GameFramework.Network
     public enum ServiceType : byte
     {
         /// <summary>
-        /// WebSocket 网络服务。
+        /// TCP 网络服务。
         /// </summary>
-        WebSocket = 0,
-        
+        Tcp = 0,
+
+        /// <summary>
+        /// 使用同步接收的 TCP 网络服务。
+        /// </summary>
+        TcpWithSyncReceive
     }
 }

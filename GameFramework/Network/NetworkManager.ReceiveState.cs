@@ -89,6 +89,8 @@ namespace GameFramework.Network
                     throw new GameFrameworkException("Target length is invalid.");
                 }
 
+                m_Stream.Position = 0L;
+                m_Stream.SetLength(targetLength);
                 m_PacketHeader = packetHeader;
             }
         }
