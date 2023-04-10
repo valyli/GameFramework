@@ -1469,6 +1469,17 @@ namespace GameFramework.Resource
             return resourceInfo.ResourceName.FullName;
         }
 
+        public bool HasResourceGroupReady(string resourceGroupName)
+        {
+            IResourceGroup resourceGroup = GetResourceGroup(resourceGroupName);
+            if (resourceGroup == null)
+            {
+                throw new GameFrameworkException($"Resource group name invalid. {resourceGroupName}");
+            }
+
+            return resourceGroup.Ready;
+        }
+
         /// <summary>
         /// 异步加载资源。
         /// </summary>
@@ -1640,6 +1651,30 @@ namespace GameFramework.Resource
             }
 
             m_ResourceLoader.LoadAsset(assetName, assetType, priority, loadAssetCallbacks, userData, updateOnly);
+        }
+
+        /// <summary>
+        /// 更新资源组。
+        /// </summary>
+        /// <param name="resourceGroupName">要加载资源组的名称。</param>
+        public void UpdateResourceGroup(string resourceGroupName)
+        {
+            if (string.IsNullOrEmpty(resourceGroupName))
+            {
+                throw new GameFrameworkException("ResourceGroupName name is invalid.");
+            }
+
+            ResourceGroup resourceGroup = GetResourceGroup(resourceGroupName) as ResourceGroup;
+            ResourceName[] resourceNames = resourceGroup.InternalGetResourceNames();
+            
+            foreach (ResourceName resourceName in resourceNames)
+            {
+                ResourceInfo resourceInfo = GetResourceInfo(resourceName);
+                if (!resourceInfo.Ready)
+                {
+                    UpdateResource(resourceInfo.ResourceName);
+                }
+            }
         }
 
         /// <summary>

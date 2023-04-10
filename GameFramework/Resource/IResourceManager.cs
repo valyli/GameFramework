@@ -597,6 +597,19 @@ namespace GameFramework.Resource
         void LoadAsset(string assetName, Type assetType, int priority, LoadAssetCallbacks loadAssetCallbacks, object userData, bool updateOnly = false);
 
         /// <summary>
+        /// 资源组是否准备完成
+        /// </summary>
+        /// <param name="resourceGroupName"></param>
+        /// <returns>bool</returns>
+        bool HasResourceGroupReady(string resourceGroupName);
+        
+        /// <summary>
+        /// 更新资源组。
+        /// </summary>
+        /// <param name="resourceGroupName">要加载资源组的名称。</param>
+        void UpdateResourceGroup(string resourceGroupName);
+
+        /// <summary>
         /// 卸载资源。
         /// </summary>
         /// <param name="asset">要卸载的资源。</param>
